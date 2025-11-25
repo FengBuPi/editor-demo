@@ -87,6 +87,98 @@
         ➡
       </button>
       <div class="divider"></div>
+      <button
+        @click="
+          editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+        "
+        :disabled="!editor?.can().insertTable()"
+        type="button"
+        title="插入表格">
+        ⧈ 表格
+      </button>
+      <div class="divider"></div>
+      <button
+        @click="editor?.chain().focus().addColumnBefore().run()"
+        :disabled="!editor?.can().addColumnBefore()"
+        type="button"
+        title="在左侧添加列">
+        ⬅ 列
+      </button>
+      <button
+        @click="editor?.chain().focus().addColumnAfter().run()"
+        :disabled="!editor?.can().addColumnAfter()"
+        type="button"
+        title="在右侧添加列">
+        列 ➡
+      </button>
+      <button
+        @click="editor?.chain().focus().deleteColumn().run()"
+        :disabled="!editor?.can().deleteColumn()"
+        type="button"
+        title="删除列">
+        ✕ 列
+      </button>
+      <div class="divider"></div>
+      <button
+        @click="editor?.chain().focus().addRowBefore().run()"
+        :disabled="!editor?.can().addRowBefore()"
+        type="button"
+        title="在上方添加行">
+        ⬆ 行
+      </button>
+      <button
+        @click="editor?.chain().focus().addRowAfter().run()"
+        :disabled="!editor?.can().addRowAfter()"
+        type="button"
+        title="在下方添加行">
+        行 ⬇
+      </button>
+      <button
+        @click="editor?.chain().focus().deleteRow().run()"
+        :disabled="!editor?.can().deleteRow()"
+        type="button"
+        title="删除行">
+        ✕ 行
+      </button>
+      <div class="divider"></div>
+      <button
+        @click="editor?.chain().focus().deleteTable().run()"
+        :disabled="!editor?.can().deleteTable()"
+        type="button"
+        title="删除表格">
+        ✕ 表格
+      </button>
+      <button
+        @click="editor?.chain().focus().mergeCells().run()"
+        :disabled="!editor?.can().mergeCells()"
+        type="button"
+        title="合并单元格">
+        ⧉ 合并
+      </button>
+      <button
+        @click="editor?.chain().focus().splitCell().run()"
+        :disabled="!editor?.can().splitCell()"
+        type="button"
+        title="拆分单元格">
+        ⧈ 拆分
+      </button>
+      <button
+        @click="editor?.chain().focus().toggleHeaderColumn().run()"
+        :disabled="!editor?.can().toggleHeaderColumn()"
+        :class="{ 'is-active': editor?.isActive('tableHeader') }"
+        type="button"
+        title="切换列标题">
+        ⧉ 列标题
+      </button>
+      <button
+        @click="editor?.chain().focus().toggleHeaderRow().run()"
+        :disabled="!editor?.can().toggleHeaderRow()"
+        :class="{ 'is-active': editor?.isActive('tableHeader') }"
+        type="button"
+        title="切换行标题">
+        ⧉ 行标题
+      </button>
+      <div class="divider"></div>
       <button @click="editor?.chain().focus().setHorizontalRule().run()" type="button">─</button>
       <button
         @click="editor?.chain().focus().undo().run()"
@@ -121,6 +213,10 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import DragHandle from "@tiptap/extension-drag-handle-vue-3";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableCell } from "@tiptap/extension-table-cell";
 
 const editor = useEditor({
   extensions: [
@@ -130,6 +226,27 @@ const editor = useEditor({
     }),
     TextAlign.configure({
       types: ["heading", "paragraph"],
+    }),
+    Table.configure({
+      resizable: true,
+      HTMLAttributes: {
+        class: "tiptap-table",
+      },
+    }),
+    TableRow.configure({
+      HTMLAttributes: {
+        class: "tiptap-table-row",
+      },
+    }),
+    TableHeader.configure({
+      HTMLAttributes: {
+        class: "tiptap-table-header",
+      },
+    }),
+    TableCell.configure({
+      HTMLAttributes: {
+        class: "tiptap-table-cell",
+      },
     }),
   ],
   content: "<p>欢迎使用 Tiptap 编辑器！</p><p>试试选中文字并点击工具栏按钮来格式化文本。</p>",
@@ -319,6 +436,96 @@ onBeforeUnmount(() => {
 .editor-content :deep(.ProseMirror h2[style*="text-align: right"]),
 .editor-content :deep(.ProseMirror h3[style*="text-align: right"]) {
   text-align: right;
+}
+
+/* 表格样式 */
+.editor-content :deep(.ProseMirror table) {
+  border-collapse: collapse;
+  margin: 1em 0;
+  table-layout: fixed;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+.editor-content :deep(.ProseMirror table td),
+.editor-content :deep(.ProseMirror table th) {
+  min-width: 1em;
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.editor-content :deep(.ProseMirror table th) {
+  font-weight: 600;
+  text-align: left;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.editor-content :deep(.ProseMirror table .selectedCell:after) {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(200, 200, 255, 0.4);
+  pointer-events: none;
+}
+
+.editor-content :deep(.ProseMirror table .column-resize-handle) {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: #adf;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.editor-content :deep(.ProseMirror table:hover .column-resize-handle) {
+  opacity: 1;
+}
+
+.editor-content :deep(.ProseMirror table p) {
+  margin: 0;
+  padding: 0;
+}
+
+.editor-content :deep(.ProseMirror table p.is-editor-empty:first-child::before) {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+/* 表格行样式 */
+.editor-content :deep(.ProseMirror table tr) {
+  border-bottom: 1px solid #ddd;
+}
+
+.editor-content :deep(.ProseMirror table tr:last-child) {
+  border-bottom: none;
+}
+
+/* 表格单元格悬停效果 */
+.editor-content :deep(.ProseMirror table td:hover),
+.editor-content :deep(.ProseMirror table th:hover) {
+  background-color: #f9f9f9;
+}
+
+/* 表格整体样式增强 */
+.editor-content :deep(.ProseMirror table) {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .output {

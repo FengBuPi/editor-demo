@@ -3,7 +3,7 @@ import TiptapEditor from "./components/TiptapEditor.vue";
 import TiptapEditorCollaboration from "./components/TiptapEditorCollaboration.vue";
 import { ref } from "vue";
 
-const activeTab = ref<"editor" | "collaboration">("collaboration");
+const activeTab = ref<"editor" | "collaboration">("editor");
 </script>
 
 <template>
