@@ -274,6 +274,22 @@ const editor = useEditor({
       HTMLAttributes: {
         class: "tiptap-image",
       },
+      resize: {
+        enabled: true,
+        directions: [
+          "top",
+          "bottom",
+          "left",
+          "right",
+          "top-left",
+          "top-right",
+          "bottom-left",
+          "bottom-right",
+        ],
+        minWidth: 50,
+        minHeight: 50,
+        alwaysPreserveAspectRatio: true,
+      },
     }),
     // 自定义视频扩展（支持 HTML5 video 和 iframe）
     Node.create({
@@ -746,6 +762,7 @@ onBeforeUnmount(() => {
   display: block;
   margin: 0.5em 0;
   border-radius: 4px;
+  cursor: pointer;
 }
 
 /* 表格中的图片样式 */
@@ -766,6 +783,94 @@ onBeforeUnmount(() => {
 /* 图片加载失败时的占位符 */
 .editor-content :deep(.ProseMirror img[src=""]) {
   display: none;
+}
+
+/* 图片 resize 手柄样式 - 使用官方属性选择器 */
+.editor-content :deep(.ProseMirror [data-resize-handle]) {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 2px;
+  z-index: 10;
+  transition: background 0.2s;
+}
+
+.editor-content :deep(.ProseMirror [data-resize-handle]:hover) {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* 角落手柄 */
+.editor-content :deep(.ProseMirror [data-resize-handle="top-left"]),
+.editor-content :deep(.ProseMirror [data-resize-handle="top-right"]),
+.editor-content :deep(.ProseMirror [data-resize-handle="bottom-left"]),
+.editor-content :deep(.ProseMirror [data-resize-handle="bottom-right"]) {
+  width: 8px;
+  height: 8px;
+}
+
+.editor-content :deep(.ProseMirror [data-resize-handle="top-left"]) {
+  top: -4px;
+  left: -4px;
+  cursor: nwse-resize;
+}
+
+.editor-content :deep(.ProseMirror [data-resize-handle="top-right"]) {
+  top: -4px;
+  right: -4px;
+  cursor: nesw-resize;
+}
+
+.editor-content :deep(.ProseMirror [data-resize-handle="bottom-left"]) {
+  bottom: -4px;
+  left: -4px;
+  cursor: nesw-resize;
+}
+
+.editor-content :deep(.ProseMirror [data-resize-handle="bottom-right"]) {
+  bottom: -4px;
+  right: -4px;
+  cursor: nwse-resize;
+}
+
+/* 边缘手柄 */
+.editor-content :deep(.ProseMirror [data-resize-handle="top"]),
+.editor-content :deep(.ProseMirror [data-resize-handle="bottom"]) {
+  height: 6px;
+  left: 8px;
+  right: 8px;
+}
+
+.editor-content :deep(.ProseMirror [data-resize-handle="top"]) {
+  top: -3px;
+  cursor: ns-resize;
+}
+
+.editor-content :deep(.ProseMirror [data-resize-handle="bottom"]) {
+  bottom: -3px;
+  cursor: ns-resize;
+}
+
+.editor-content :deep(.ProseMirror [data-resize-handle="left"]),
+.editor-content :deep(.ProseMirror [data-resize-handle="right"]) {
+  width: 6px;
+  top: 8px;
+  bottom: 8px;
+}
+
+.editor-content :deep(.ProseMirror [data-resize-handle="left"]) {
+  left: -3px;
+  cursor: ew-resize;
+}
+
+.editor-content :deep(.ProseMirror [data-resize-handle="right"]) {
+  right: -3px;
+  cursor: ew-resize;
+}
+
+/* 调整状态时的容器样式 */
+.editor-content :deep(.ProseMirror [data-resize-state="true"] [data-resize-wrapper]) {
+  outline: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 0.125rem;
 }
 
 /* 视频样式 */
