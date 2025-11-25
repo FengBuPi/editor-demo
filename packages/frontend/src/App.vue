@@ -71,7 +71,7 @@ h1 {
 }
 
 .content {
-  max-width: 1400px;
+  min-width: 1400px;
   margin: 0 auto;
   padding: 0 20px;
 }

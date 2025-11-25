@@ -40,6 +40,15 @@
         连接状态: <span :class="statusClass">{{ connectionStatus }}</span>
       </p>
       <p>在线用户数: {{ onlineUsersCount }}</p>
+      <div v-if="onlineUsers.length > 0" class="online-users">
+        <h4>在线用户</h4>
+        <div class="user-list">
+          <div v-for="(user, index) in onlineUsers" :key="index" class="user-item">
+            <span class="user-color-indicator" :style="{ backgroundColor: user.color }"></span>
+            <span class="user-name">{{ user.name }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -59,15 +68,33 @@ const documentId = ref("demo-document-1");
 
 const connectionStatus = ref("未连接");
 const onlineUsersCount = ref(0);
+const onlineUsers = ref<Array<{ name: string; color: string }>>([]);
 const statusClass = computed(() =>
   connectionStatus.value === "已连接" ? "status-connected" : "status-disconnected",
 );
 
 const WS_URL = "ws://localhost:3001";
 
+// 生成更易读的用户颜色（避免太亮或太暗）
+const generateUserColor = () => {
+  const colors = [
+    "#FF6B6B", // 红色
+    "#4ECDC4", // 青色
+    "#45B7D1", // 蓝色
+    "#FFA07A", // 浅橙色
+    "#98D8C8", // 薄荷绿
+    "#F7DC6F", // 黄色
+    "#BB8FCE", // 紫色
+    "#85C1E2", // 天蓝色
+    "#F8B739", // 橙色
+    "#52BE80", // 绿色
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
+
 const userInfo = {
   name: `用户 ${Math.floor(Math.random() * 1000)}`,
-  color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+  color: generateUserColor(),
 };
 
 let provider: WebsocketProvider | null = null;
@@ -83,7 +110,7 @@ onMounted(() => {
       StarterKit.configure({
         // 禁用 history 扩展，因为协作编辑使用 CollaborationHistory
         undoRedo: false,
-      }), // 临时类型断言，因为某些版本的 StarterKit 类型定义可能不完整
+      }),
       Placeholder.configure({
         placeholder: "开始协作编辑...",
       }),
@@ -93,16 +120,50 @@ onMounted(() => {
       CollaborationCaret.configure({
         provider: provider,
         user: userInfo,
+        // 自定义光标渲染，使其更明显
+        render: (user) => {
+          const cursor = document.createElement("span");
+          cursor.classList.add("collaboration-caret");
+          cursor.setAttribute("data-user", user.name);
+          cursor.setAttribute("data-color", user.color);
+          // 设置光标样式
+          cursor.style.borderLeftColor = user.color;
+          // 创建用户标签（使用 CSS 变量来传递颜色）
+          const style = document.createElement("style");
+          style.textContent = `
+            .collaboration-caret[data-color="${user.color}"]::before {
+              background-color: ${user.color} !important;
+            }
+          `;
+          if (!document.head.querySelector(`style[data-caret-color="${user.color}"]`)) {
+            style.setAttribute("data-caret-color", user.color);
+            document.head.appendChild(style);
+          }
+          return cursor;
+        },
       }),
     ],
-    // 使用协作编辑时，不要设置初始 content，内容从 Y.Doc 中读取
   });
 
   if (!provider || !ydoc) return;
   const awareness = provider?.awareness;
   if (!awareness) return;
+
   const updateUserCount = () => {
-    onlineUsersCount.value = awareness.getStates().size;
+    const states = awareness.getStates();
+    onlineUsersCount.value = states.size;
+
+    // 更新在线用户列表
+    const users: Array<{ name: string; color: string }> = [];
+    states.forEach((state) => {
+      if (state.user) {
+        users.push({
+          name: state.user.name || "未知用户",
+          color: state.user.color || "#999999",
+        });
+      }
+    });
+    onlineUsers.value = users;
   };
 
   updateUserCount();
@@ -206,6 +267,37 @@ onBeforeUnmount(() => {
   min-height: 300px;
 }
 
+/* 协作光标样式优化 */
+.editor-content :deep(.collaboration-caret) {
+  position: relative;
+  margin-left: -1px;
+  margin-right: -1px;
+  border-left: 2px solid;
+  word-break: normal;
+  pointer-events: none;
+  height: 1.2em;
+  display: inline-block;
+}
+
+.editor-content :deep(.collaboration-caret::before) {
+  content: attr(data-user);
+  position: absolute;
+  top: -1.5em;
+  left: 0;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 4px 4px 4px 0;
+  color: white;
+  pointer-events: none;
+  opacity: 1; /* 始终显示用户名称 */
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: translateX(-50%);
+  transition: opacity 0.2s;
+}
+
 .drag-handle-icon {
   display: flex;
   align-items: center;
@@ -252,5 +344,55 @@ onBeforeUnmount(() => {
 .status-disconnected {
   color: #dc3545;
   font-weight: bold;
+}
+
+.online-users {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.online-users h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s;
+}
+
+.user-item:hover {
+  background: #f5f5f5;
+  border-color: #d0d0d0;
+}
+
+.user-color-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid white;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.user-name {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
 }
 </style>
