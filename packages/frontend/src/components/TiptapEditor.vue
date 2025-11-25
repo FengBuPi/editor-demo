@@ -179,6 +179,15 @@
         ⧉ 行标题
       </button>
       <div class="divider"></div>
+      <button @click="insertImage" type="button" title="通过 URL 插入图片">🖼️ 图片</button>
+      <button @click="insertImageFromFile" type="button" title="上传本地图片">📁 上传</button>
+      <input
+        ref="fileInput"
+        type="file"
+        accept="image/*"
+        style="display: none"
+        @change="handleImageUpload" />
+      <div class="divider"></div>
       <button @click="editor?.chain().focus().setHorizontalRule().run()" type="button">─</button>
       <button
         @click="editor?.chain().focus().undo().run()"
@@ -207,7 +216,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount } from "vue";
+import { onBeforeUnmount, ref } from "vue";
 import { useEditor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -217,6 +226,7 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
+import Image from "@tiptap/extension-image";
 
 const editor = useEditor({
   extensions: [
@@ -248,6 +258,13 @@ const editor = useEditor({
         class: "tiptap-table-cell",
       },
     }),
+    Image.configure({
+      inline: true,
+      allowBase64: true,
+      HTMLAttributes: {
+        class: "tiptap-image",
+      },
+    }),
   ],
   content: "<p>欢迎使用 Tiptap 编辑器！</p><p>试试选中文字并点击工具栏按钮来格式化文本。</p>",
   editorProps: {
@@ -256,6 +273,57 @@ const editor = useEditor({
     },
   },
 });
+
+const fileInput = ref<HTMLInputElement | null>(null);
+
+// 插入图片（通过 URL）
+const insertImage = () => {
+  const url = window.prompt("请输入图片 URL:");
+  if (url) {
+    editor.value?.chain().focus().setImage({ src: url }).run();
+  }
+};
+
+// 处理图片上传
+const handleImageUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  // 检查文件类型
+  if (!file.type.startsWith("image/")) {
+    alert("请选择图片文件");
+    return;
+  }
+
+  // 使用 createObjectURL 创建临时 URL
+  const imageUrl = URL.createObjectURL(file);
+  if (imageUrl && editor.value) {
+    // 插入图片
+    editor.value.chain().focus().setImage({ src: imageUrl }).run();
+  } else {
+    // 如果 createObjectURL 失败，则使用 FileReader 将图片转换为 base64
+    // 使用 FileReader 将图片转换为 base64
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      if (base64 && editor.value) {
+        editor.value.chain().focus().setImage({ src: base64 }).run();
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // 重置 input
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
+};
+
+// 通过文件选择器插入图片
+const insertImageFromFile = () => {
+  fileInput.value?.click();
+};
 
 onBeforeUnmount(() => {
   editor.value?.destroy();
@@ -526,6 +594,35 @@ onBeforeUnmount(() => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   overflow: hidden;
+}
+
+/* 图片样式 */
+.editor-content :deep(.ProseMirror img) {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0.5em 0;
+  border-radius: 4px;
+}
+
+/* 表格中的图片样式 */
+.editor-content :deep(.ProseMirror table img) {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0;
+  border-radius: 2px;
+}
+
+/* 图片选中状态 */
+.editor-content :deep(.ProseMirror img.selected) {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* 图片加载失败时的占位符 */
+.editor-content :deep(.ProseMirror img[src=""]) {
+  display: none;
 }
 
 .output {
