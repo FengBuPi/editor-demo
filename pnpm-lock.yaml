@@ -78,6 +78,9 @@ importers:
       '@tiptap/extension-text-align':
         specifier: ^3.11.0
         version: 3.11.0(@tiptap/core@3.11.0(@tiptap/pm@3.11.0))
+      '@tiptap/extension-youtube':
+        specifier: ^3.11.0
+        version: 3.11.0(@tiptap/core@3.11.0(@tiptap/pm@3.11.0))
       '@tiptap/starter-kit':
         specifier: ^3.11.0
         version: 3.11.0
@@ -456,6 +459,11 @@ packages:
 
   '@tiptap/extension-underline@3.11.0':
     resolution: {integrity: sha512-D3PsS/84RlQKFjd5eerMIUioC0mNh4yy1RRV/WbXx6ugu+6T+0hT42gNk9Ap8pDsVQZCk0SHfDyBEUFC2KOwKw==}
+    peerDependencies:
+      '@tiptap/core': ^3.11.0
+
+  '@tiptap/extension-youtube@3.11.0':
+    resolution: {integrity: sha512-BEPFdA+wrNZer4Ewp5lqOAKx4wTGVfX7ep+UCxnxtMpfpIF1TaNZe3Dt89Wh6ZgV/TnSsA/boB0Q4UXn90LVIQ==}
     peerDependencies:
       '@tiptap/core': ^3.11.0
 
@@ -1316,6 +1324,10 @@ snapshots:
       '@tiptap/core': 3.11.0(@tiptap/pm@3.11.0)
 
   '@tiptap/extension-underline@3.11.0(@tiptap/core@3.11.0(@tiptap/pm@3.11.0))':
+    dependencies:
+      '@tiptap/core': 3.11.0(@tiptap/pm@3.11.0)
+
+  '@tiptap/extension-youtube@3.11.0(@tiptap/core@3.11.0(@tiptap/pm@3.11.0))':
     dependencies:
       '@tiptap/core': 3.11.0(@tiptap/pm@3.11.0)
 

@@ -188,6 +188,15 @@
         style="display: none"
         @change="handleImageUpload" />
       <div class="divider"></div>
+      <button @click="insertVideo" type="button" title="通过 URL 插入视频">🎬 视频</button>
+      <button @click="insertVideoFromFile" type="button" title="上传本地视频">📹 上传视频</button>
+      <input
+        ref="videoInput"
+        type="file"
+        accept="video/*"
+        style="display: none"
+        @change="handleVideoUpload" />
+      <div class="divider"></div>
       <button @click="editor?.chain().focus().setHorizontalRule().run()" type="button">─</button>
       <button
         @click="editor?.chain().focus().undo().run()"
@@ -227,6 +236,7 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import Image from "@tiptap/extension-image";
+import { Node } from "@tiptap/core";
 
 const editor = useEditor({
   extensions: [
@@ -265,6 +275,99 @@ const editor = useEditor({
         class: "tiptap-image",
       },
     }),
+    // 自定义视频扩展（支持 HTML5 video 和 iframe）
+    Node.create({
+      name: "video",
+      group: "block",
+      atom: true,
+      addAttributes() {
+        return {
+          src: {
+            default: null,
+          },
+          width: {
+            default: "100%",
+          },
+          height: {
+            default: "auto",
+          },
+          controls: {
+            default: true,
+          },
+          autoplay: {
+            default: false,
+          },
+          loop: {
+            default: false,
+          },
+          muted: {
+            default: false,
+          },
+        };
+      },
+      parseHTML() {
+        return [
+          {
+            tag: "video",
+            getAttrs: (node) => {
+              if (typeof node === "string") return false;
+              return {
+                src: (node as HTMLElement).getAttribute("src"),
+                width: (node as HTMLElement).getAttribute("width") || "100%",
+                height: (node as HTMLElement).getAttribute("height") || "auto",
+                controls: (node as HTMLElement).hasAttribute("controls"),
+                autoplay: (node as HTMLElement).hasAttribute("autoplay"),
+                loop: (node as HTMLElement).hasAttribute("loop"),
+                muted: (node as HTMLElement).hasAttribute("muted"),
+              };
+            },
+          },
+          {
+            tag: "iframe[src]",
+            getAttrs: (node) => {
+              if (typeof node === "string") return false;
+              return {
+                src: (node as HTMLElement).getAttribute("src") || "",
+                width: (node as HTMLElement).getAttribute("width") || "100%",
+                height: (node as HTMLElement).getAttribute("height") || "400",
+              };
+            },
+          },
+        ];
+      },
+      renderHTML({ HTMLAttributes }) {
+        // 如果是 iframe URL，渲染为 iframe
+        if (
+          HTMLAttributes.src &&
+          (HTMLAttributes.src.startsWith("http") || HTMLAttributes.src.startsWith("//"))
+        ) {
+          return [
+            "iframe",
+            {
+              ...HTMLAttributes,
+              frameborder: "0",
+              allow:
+                "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+              allowfullscreen: "true",
+            },
+          ];
+        }
+        // 否则渲染为 HTML5 video
+        return ["video", HTMLAttributes];
+      },
+      addCommands() {
+        return {
+          setVideo:
+            (attributes: { src: string; width?: string; height?: string }) =>
+            ({ commands }: { commands: any }) => {
+              return commands.insertContent({
+                type: this.name,
+                attrs: attributes,
+              });
+            },
+        } as any;
+      },
+    }),
   ],
   content: "<p>欢迎使用 Tiptap 编辑器！</p><p>试试选中文字并点击工具栏按钮来格式化文本。</p>",
   editorProps: {
@@ -275,6 +378,7 @@ const editor = useEditor({
 });
 
 const fileInput = ref<HTMLInputElement | null>(null);
+const videoInput = ref<HTMLInputElement | null>(null);
 
 // 插入图片（通过 URL）
 const insertImage = () => {
@@ -323,6 +427,45 @@ const handleImageUpload = (event: Event) => {
 // 通过文件选择器插入图片
 const insertImageFromFile = () => {
   fileInput.value?.click();
+};
+
+// 通过文件选择器插入视频
+const insertVideoFromFile = () => {
+  videoInput.value?.click();
+};
+
+// 插入视频（通过 URL）
+const insertVideo = () => {
+  const url = window.prompt("请输入视频 URL（支持 HTML5 video 或 iframe）:");
+  if (url && editor.value) {
+    (editor.value.chain().focus() as any).setVideo({ src: url }).run();
+  }
+};
+
+// 处理视频上传
+const handleVideoUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  // 检查文件类型
+  if (!file.type.startsWith("video/")) {
+    alert("请选择视频文件");
+    return;
+  }
+
+  // 使用 createObjectURL 创建临时 URL
+  const videoUrl = URL.createObjectURL(file);
+
+  if (videoUrl && editor.value) {
+    // 插入视频
+    (editor.value.chain().focus() as any).setVideo({ src: videoUrl }).run();
+  }
+
+  // 重置 input
+  if (videoInput.value) {
+    videoInput.value.value = "";
+  }
 };
 
 onBeforeUnmount(() => {
@@ -623,6 +766,34 @@ onBeforeUnmount(() => {
 /* 图片加载失败时的占位符 */
 .editor-content :deep(.ProseMirror img[src=""]) {
   display: none;
+}
+
+/* 视频样式 */
+.editor-content :deep(.ProseMirror video) {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1em auto;
+  border-radius: 4px;
+  background: #000;
+}
+
+/* 通用 iframe 视频样式 */
+.editor-content :deep(.ProseMirror iframe) {
+  max-width: 100%;
+  width: 100%;
+  border: none;
+  border-radius: 4px;
+  margin: 1em auto;
+  display: block;
+}
+
+/* 表格中的视频样式 */
+.editor-content :deep(.ProseMirror table video),
+.editor-content :deep(.ProseMirror table iframe) {
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
 }
 
 .output {
