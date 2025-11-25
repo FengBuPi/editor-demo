@@ -1,5 +1,130 @@
-# Vue 3 + TypeScript + Vite
+# Tiptap 编辑器 Demo (Monorepo)
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+基于 Tiptap + Yjs 的实时协作编辑器项目，使用 monorepo 结构。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 项目结构
+
+```
+editor-demo/
+├── packages/
+│   ├── frontend/     # Vue 3 + Tiptap 前端应用
+│   └── backend/       # Node.js WebSocket 后端服务器
+├── pnpm-workspace.yaml
+└── package.json
+```
+
+## 快速开始
+
+### 安装依赖
+
+```bash
+pnpm install
+```
+
+### 启动开发服务器
+
+#### 方式 1: 分别启动（推荐）
+
+```bash
+# 终端 1: 启动后端服务器
+pnpm dev:backend
+
+# 终端 2: 启动前端应用
+pnpm dev
+```
+
+#### 方式 2: 同时启动
+
+```bash
+pnpm dev:all
+```
+
+### 访问应用
+
+- 前端: http://localhost:5173
+- 后端 WebSocket: ws://localhost:3001/ws
+
+## 功能特性
+
+### 前端 (`packages/frontend`)
+
+- ✅ Tiptap 富文本编辑器
+- ✅ 实时协作编辑
+- ✅ 协作光标显示
+- ✅ 拖拽手柄
+- ✅ 文本格式化工具
+
+### 后端 (`packages/backend`)
+
+- ✅ 原生 Node.js WebSocket 服务器
+- ✅ Yjs 文档同步
+- ✅ 多文档支持
+- ✅ 自动状态同步
+
+## 开发
+
+### 前端开发
+
+```bash
+cd packages/frontend
+pnpm dev
+```
+
+### 后端开发
+
+```bash
+cd packages/backend
+pnpm dev
+```
+
+## 构建
+
+```bash
+# 构建前端
+pnpm build
+
+# 启动生产环境后端
+pnpm start:backend
+```
+
+## 测试协作功能
+
+### 快速测试步骤
+
+1. **启动后端服务器**（必须！）
+   ```bash
+   pnpm dev:backend
+   ```
+   看到 "WebSocket 服务器运行在 ws://localhost:3001" 表示成功
+
+2. **启动前端应用**
+   ```bash
+   pnpm dev
+   ```
+   或者使用 `pnpm dev:all` 同时启动前后端
+
+3. **打开浏览器**
+   - 访问 http://localhost:5173
+   - 点击 **"协作编辑器"** 标签页
+   - 查看底部 "协作信息" 面板，确认连接状态为 "已连接"
+
+4. **测试实时同步**
+   - 按 `Cmd/Ctrl + T` 打开新标签页
+   - 再次访问 http://localhost:5173
+   - 切换到 "协作编辑器" 标签
+   - 在一个标签页输入文字，另一个标签页会**实时显示**！
+
+### 详细使用说明
+
+📖 **完整使用指南**: [USAGE_GUIDE.md](./USAGE_GUIDE.md)
+
+## 技术栈
+
+- **前端**: Vue 3 + TypeScript + Vite + Tiptap + Yjs
+- **后端**: Node.js (原生) + WebSocket + Yjs
+
+## 更多信息
+
+- 📖 **[协作编辑器使用指南](./USAGE_GUIDE.md)** - 详细的使用说明和常见问题
+- 🔧 [协作功能技术指南](./COLLABORATION_GUIDE.md) - 技术实现细节
+- 🖥️ [后端服务器文档](./packages/backend/README.md) - 后端服务器说明
