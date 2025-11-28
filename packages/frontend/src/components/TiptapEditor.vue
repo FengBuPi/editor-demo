@@ -385,7 +385,7 @@ const editor = useEditor({
       },
     }),
   ],
-  content: "<p>欢迎使用 Tiptap 编辑器！</p><p>试试选中文字并点击工具栏按钮来格式化文本。</p>",
+  content: "",
   editorProps: {
     attributes: {
       class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none",
@@ -399,9 +399,8 @@ const videoInput = ref<HTMLInputElement | null>(null);
 // 插入图片（通过 URL）
 const insertImage = () => {
   const url = window.prompt("请输入图片 URL:");
-  if (url) {
-    editor.value?.chain().focus().setImage({ src: url }).run();
-  }
+  if (!url) return;
+  editor.value?.chain().focus().setImage({ src: url }).run();
 };
 
 // 处理图片上传
