@@ -197,6 +197,10 @@
         style="display: none"
         @change="handleVideoUpload" />
       <div class="divider"></div>
+      <button @click="insertVideoPlanTemplate" type="button" title="插入视频规划模板">
+        📋 视频规划
+      </button>
+      <div class="divider"></div>
       <button @click="editor?.chain().focus().setHorizontalRule().run()" type="button">─</button>
       <button
         @click="editor?.chain().focus().undo().run()"
@@ -237,6 +241,8 @@ import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import Image from "@tiptap/extension-image";
 import { Node } from "@tiptap/core";
+import { VueNodeViewRenderer } from "@tiptap/vue-3";
+import VideoPlanTemplate from "./VideoPlanTemplate.vue";
 
 const editor = useEditor({
   extensions: [
@@ -384,6 +390,80 @@ const editor = useEditor({
         } as any;
       },
     }),
+    // 视频规划模板扩展
+    Node.create({
+      name: "videoPlanTemplate",
+      group: "block",
+      atom: false,
+      addAttributes() {
+        return {
+          remark: {
+            default: "",
+          },
+          description: {
+            default: "",
+          },
+          voiceover: {
+            default: "",
+          },
+          scene: {
+            default: "",
+          },
+          props: {
+            default: "",
+          },
+          actors: {
+            default: "",
+          },
+          costume: {
+            default: "",
+          },
+          materials: {
+            default: "",
+          },
+        };
+      },
+      parseHTML() {
+        return [
+          {
+            tag: "div[data-video-plan-template]",
+            getAttrs: (node) => {
+              if (typeof node === "string") return false;
+              const element = node as HTMLElement;
+              return {
+                remark: element.querySelector('[data-field="remark"]')?.textContent || "",
+                description: element.querySelector('[data-field="description"]')?.textContent || "",
+                voiceover: element.querySelector('[data-field="voiceover"]')?.textContent || "",
+                scene: element.querySelector('[data-field="scene"]')?.textContent || "",
+                props: element.querySelector('[data-field="props"]')?.textContent || "",
+                actors: element.querySelector('[data-field="actors"]')?.textContent || "",
+                costume: element.querySelector('[data-field="costume"]')?.textContent || "",
+                materials: element.querySelector('[data-field="materials"]')?.textContent || "",
+              };
+            },
+          },
+        ];
+      },
+      renderHTML({ HTMLAttributes }) {
+        return [
+          "div",
+          {
+            "data-video-plan-template": "",
+            "data-remark": HTMLAttributes.remark || "",
+            "data-description": HTMLAttributes.description || "",
+            "data-voiceover": HTMLAttributes.voiceover || "",
+            "data-scene": HTMLAttributes.scene || "",
+            "data-props": HTMLAttributes.props || "",
+            "data-actors": HTMLAttributes.actors || "",
+            "data-costume": HTMLAttributes.costume || "",
+            "data-materials": HTMLAttributes.materials || "",
+          },
+        ];
+      },
+      addNodeView() {
+        return VueNodeViewRenderer(VideoPlanTemplate);
+      },
+    }),
   ],
   content: "",
   editorProps: {
@@ -481,6 +561,29 @@ const handleVideoUpload = (event: Event) => {
   if (videoInput.value) {
     videoInput.value.value = "";
   }
+};
+
+// 插入视频规划模板
+const insertVideoPlanTemplate = () => {
+  if (!editor.value) return;
+
+  editor.value
+    .chain()
+    .focus()
+    .insertContent({
+      type: "videoPlanTemplate",
+      attrs: {
+        remark: "",
+        description: "",
+        voiceover: "",
+        scene: "",
+        props: "",
+        actors: "",
+        costume: "",
+        materials: "",
+      },
+    })
+    .run();
 };
 
 onBeforeUnmount(() => {
