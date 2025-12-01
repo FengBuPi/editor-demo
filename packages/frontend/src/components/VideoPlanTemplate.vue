@@ -12,30 +12,33 @@
       <div class="video-plan-middle">
         <div class="video-plan-field-row">
           <div class="video-plan-field-label">备注</div>
-          <div
-            ref="remarkRef"
-            class="video-plan-field-input"
-            contenteditable="true"
-            @input="handleInput"
-            data-field="remark"></div>
+          <div class="video-plan-field-input">
+            <a-textarea
+              v-model="fieldValues.remark"
+              placeholder="请输入备注"
+              :auto-size="{ minRows: 2, maxRows: 4 }"
+              @change="handleFieldChange('remark', $event)" />
+          </div>
         </div>
         <div class="video-plan-field-row">
           <div class="video-plan-field-label">画面描述</div>
-          <div
-            ref="descriptionRef"
-            class="video-plan-field-input"
-            contenteditable="true"
-            @input="handleInput"
-            data-field="description"></div>
+          <div class="video-plan-field-input">
+            <a-textarea
+              v-model="fieldValues.description"
+              placeholder="请输入画面描述"
+              :auto-size="{ minRows: 2, maxRows: 4 }"
+              @change="handleFieldChange('description', $event)" />
+          </div>
         </div>
         <div class="video-plan-field-row">
           <div class="video-plan-field-label">口播内容</div>
-          <div
-            ref="voiceoverRef"
-            class="video-plan-field-input"
-            contenteditable="true"
-            @input="handleInput"
-            data-field="voiceover"></div>
+          <div class="video-plan-field-input">
+            <a-textarea
+              v-model="fieldValues.voiceover"
+              placeholder="请输入口播内容"
+              :auto-size="{ minRows: 2, maxRows: 4 }"
+              @change="handleFieldChange('voiceover', $event)" />
+          </div>
         </div>
       </div>
       <!-- 右侧：拍摄素材 -->
@@ -54,36 +57,41 @@
         <div class="video-plan-table-cell">物料</div>
       </div>
       <div class="video-plan-table-row">
-        <div
-          ref="sceneRef"
-          class="video-plan-table-cell"
-          contenteditable="true"
-          @input="handleInput"
-          data-field="scene"></div>
-        <div
-          ref="propsRef"
-          class="video-plan-table-cell"
-          contenteditable="true"
-          @input="handleInput"
-          data-field="props"></div>
-        <div
-          ref="actorsRef"
-          class="video-plan-table-cell"
-          contenteditable="true"
-          @input="handleInput"
-          data-field="actors"></div>
-        <div
-          ref="costumeRef"
-          class="video-plan-table-cell"
-          contenteditable="true"
-          @input="handleInput"
-          data-field="costume"></div>
-        <div
-          ref="materialsRef"
-          class="video-plan-table-cell"
-          contenteditable="true"
-          @input="handleInput"
-          data-field="materials"></div>
+        <div class="video-plan-table-cell">
+          <a-textarea
+            v-model="fieldValues.scene"
+            placeholder="请输入场景"
+            :auto-size="{ minRows: 2, maxRows: 4 }"
+            @change="handleFieldChange('scene', $event)" />
+        </div>
+        <div class="video-plan-table-cell">
+          <a-textarea
+            v-model="fieldValues.props"
+            placeholder="请输入道具"
+            :auto-size="{ minRows: 2, maxRows: 4 }"
+            @change="handleFieldChange('props', $event)" />
+        </div>
+        <div class="video-plan-table-cell">
+          <a-textarea
+            v-model="fieldValues.actors"
+            placeholder="请输入演员"
+            :auto-size="{ minRows: 2, maxRows: 4 }"
+            @change="handleFieldChange('actors', $event)" />
+        </div>
+        <div class="video-plan-table-cell">
+          <a-textarea
+            v-model="fieldValues.costume"
+            placeholder="请输入服装"
+            :auto-size="{ minRows: 2, maxRows: 4 }"
+            @change="handleFieldChange('costume', $event)" />
+        </div>
+        <div class="video-plan-table-cell">
+          <a-textarea
+            v-model="fieldValues.materials"
+            placeholder="请输入物料"
+            :auto-size="{ minRows: 2, maxRows: 4 }"
+            @change="handleFieldChange('materials', $event)" />
+        </div>
       </div>
     </div>
   </node-view-wrapper>
@@ -91,64 +99,53 @@
 
 <script setup lang="ts">
 import { NodeViewWrapper, nodeViewProps } from "@tiptap/vue-3";
-import { onMounted, watch, ref, type Ref } from "vue";
+import { onMounted, watch, reactive } from "vue";
 
-// 使用 Tiptap 提供的 nodeViewProps，包含 editor, node, updateAttributes 等
 const props = defineProps(nodeViewProps);
 
-// 所有可编辑字段的 ref 引用
-const remarkRef = ref<HTMLElement | null>(null);
-const descriptionRef = ref<HTMLElement | null>(null);
-const voiceoverRef = ref<HTMLElement | null>(null);
-const sceneRef = ref<HTMLElement | null>(null);
-const propsRef = ref<HTMLElement | null>(null);
-const actorsRef = ref<HTMLElement | null>(null);
-const costumeRef = ref<HTMLElement | null>(null);
-const materialsRef = ref<HTMLElement | null>(null);
+const fieldNames = [
+  "remark",
+  "description",
+  "voiceover",
+  "scene",
+  "props",
+  "actors",
+  "costume",
+  "materials",
+];
 
-// 字段名到 ref 的映射，便于统一处理
-const fieldRefs: Record<string, Ref<HTMLElement | null>> = {
-  remark: remarkRef,
-  description: descriptionRef,
-  voiceover: voiceoverRef,
-  scene: sceneRef,
-  props: propsRef,
-  actors: actorsRef,
-  costume: costumeRef,
-  materials: materialsRef,
-};
+const fieldValues = reactive<Record<string, string>>({
+  remark: "",
+  description: "",
+  voiceover: "",
+  scene: "",
+  props: "",
+  actors: "",
+  costume: "",
+  materials: "",
+});
 
-// 处理输入事件，将内容同步到节点属性
-const handleInput = (event: Event) => {
-  const target = event.target as HTMLElement;
-  const field = target.getAttribute("data-field");
-  if (field && props.updateAttributes) {
+const handleFieldChange = (fieldName: string, value: string) => {
+  if (props.updateAttributes) {
     props.updateAttributes({
-      [field]: target.textContent || "",
+      [fieldName]: value || "",
     });
   }
 };
 
-// 组件挂载时，从节点属性恢复内容
 onMounted(() => {
-  Object.keys(fieldRefs).forEach((field) => {
-    const element = fieldRefs[field].value;
-    if (element && props.node.attrs[field]) {
-      element.textContent = props.node.attrs[field];
-    }
+  fieldNames.forEach((field) => {
+    fieldValues[field] = props.node.attrs[field] || "";
   });
 });
 
-// 监听节点属性变化，同步更新到 DOM
 watch(
   () => props.node.attrs,
   (newAttrs) => {
-    Object.keys(fieldRefs).forEach((field) => {
-      const element = fieldRefs[field].value;
-      if (element && newAttrs[field] !== undefined) {
-        if (element.textContent !== newAttrs[field]) {
-          element.textContent = newAttrs[field] || "";
-        }
+    fieldNames.forEach((field) => {
+      const newValue = newAttrs[field] || "";
+      if (fieldValues[field] !== newValue) {
+        fieldValues[field] = newValue;
       }
     });
   },
@@ -235,8 +232,12 @@ watch(
 /* 可编辑输入框 */
 .video-plan-field-input {
   padding: 8px 12px;
-  min-height: 32px;
-  outline: none;
+  display: flex;
+  align-items: stretch;
+}
+
+.video-plan-field-input .arco-textarea {
+  width: 100%;
 }
 
 /* 底部区域：表格 */
@@ -268,8 +269,11 @@ watch(
 .video-plan-table-cell {
   background: white;
   padding: 12px;
-  min-height: 40px;
-  border: none;
-  outline: none;
+  display: flex;
+  align-items: stretch;
+}
+
+.video-plan-table-cell .arco-textarea {
+  width: 100%;
 }
 </style>
