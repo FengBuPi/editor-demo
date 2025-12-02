@@ -1,6 +1,6 @@
 <!-- 视频规划模板组件 - Tiptap NodeView -->
 <template>
-  <node-view-wrapper class="video-plan-template" contenteditable="false">
+  <node-view-wrapper class="video-plan-template">
     <!-- 顶部区域：参考画面、中间字段、拍摄素材 -->
     <div class="video-plan-top">
       <!-- 左侧：参考画面 -->

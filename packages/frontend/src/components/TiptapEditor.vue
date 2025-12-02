@@ -200,6 +200,9 @@
       <button @click="insertVideoPlanTemplate" type="button" title="插入视频规划模板">
         📋 视频规划
       </button>
+      <button @click="insertTwoEditorLayoutTemplate" type="button" title="插入两栏布局模板">
+        ☰ 两栏布局
+      </button>
       <div class="divider"></div>
       <button @click="editor?.chain().focus().setHorizontalRule().run()" type="button">─</button>
       <button
@@ -240,9 +243,11 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import Image from "@tiptap/extension-image";
-import { Node } from "@tiptap/core";
+import { CommandProps, Dispatch, Editor, Node, RawCommands } from "@tiptap/core";
 import { VueNodeViewRenderer } from "@tiptap/vue-3";
 import VideoPlanTemplate from "./VideoPlanTemplate.vue";
+import TwoEditorLayoutTemplateA from "./TwoEditorLayoutTemplate/TwoEditorLayoutTemplateA.vue";
+import TwoEditorLayoutTemplateB from "./TwoEditorLayoutTemplate/TwoEditorLayoutTemplateB.vue";
 
 const editor = useEditor({
   extensions: [
@@ -390,6 +395,88 @@ const editor = useEditor({
         } as any;
       },
     }),
+    // 两栏布局扩展A(vue组件版本)
+    Node.create({
+      name: "twoEditorLayoutTemplateA",
+      content: "inline*",
+      atom: false,
+
+      parseHTML() {
+        return [
+          {
+            tag: "twoEditorLayoutTemplateA",
+          },
+        ];
+      },
+
+      renderHTML() {
+        return ["twoEditorLayoutTemplateA", {}, 0];
+      },
+      addNodeView() {
+        return VueNodeViewRenderer(TwoEditorLayoutTemplateA);
+      },
+    }),
+    // 两栏布局扩展B(vue组件版本)
+    Node.create({
+      name: "twoEditorLayoutTemplateB",
+      content: "inline*",
+      atom: false,
+
+      parseHTML() {
+        return [
+          {
+            tag: "twoEditorLayoutTemplateB",
+          },
+        ];
+      },
+
+      renderHTML() {
+        return ["twoEditorLayoutTemplateB", {}, 0];
+      },
+      addNodeView() {
+        return VueNodeViewRenderer(TwoEditorLayoutTemplateB);
+      },
+    }),
+    // 两栏布局扩展父节点(vue组件版本)
+    Node.create({
+      name: "twoEditorLayoutTemplate",
+      group: "block",
+      atom: false,
+      content: "twoEditorLayoutTemplateA twoEditorLayoutTemplateB",
+
+      parseHTML() {
+        return [
+          {
+            tag: "div[data-two-editor-layout-template]",
+          },
+        ];
+      },
+
+      renderHTML() {
+        return ["div", { "data-two-editor-layout-template": "" }, 0];
+      },
+      addCommands() {
+        return {
+          insertTwoEditorLayoutTemplate:
+            () =>
+            ({ commands }: CommandProps) => {
+              commands.insertContent({
+                type: "twoEditorLayoutTemplate",
+                content: [
+                  {
+                    type: "twoEditorLayoutTemplateA",
+                  },
+                  {
+                    type: "twoEditorLayoutTemplateB",
+                  },
+                ],
+              });
+              return true;
+            },
+        } as Partial<RawCommands>;
+      },
+    }),
+
     // 视频规划模板扩展
     Node.create({
       name: "videoPlanTemplate",
@@ -472,6 +559,11 @@ const editor = useEditor({
     },
   },
 });
+
+const insertTwoEditorLayoutTemplate = () => {
+  if (!editor.value) return;
+  (editor.value.chain().focus() as any).insertTwoEditorLayoutTemplate().run();
+};
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const videoInput = ref<HTMLInputElement | null>(null);
