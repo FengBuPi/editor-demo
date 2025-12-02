@@ -14,5 +14,15 @@ const props = defineProps(nodeViewProps);
 
 <style scoped>
 .editor-b {
+  flex: 1;
+  min-height: 240px;
+  border: 1px solid #ddd;
+  padding: 8px;
+  box-sizing: border-box;
+  border-radius: 4px;
+}
+
+.editor-b .content {
+  min-height: 100%;
 }
 </style>

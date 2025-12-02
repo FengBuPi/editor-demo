@@ -243,7 +243,7 @@ import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import Image from "@tiptap/extension-image";
-import { CommandProps, Dispatch, Editor, Node, RawCommands } from "@tiptap/core";
+import { CommandProps, mergeAttributes, Node, RawCommands } from "@tiptap/core";
 import { VueNodeViewRenderer } from "@tiptap/vue-3";
 import VideoPlanTemplate from "./VideoPlanTemplate.vue";
 import TwoEditorLayoutTemplateA from "./TwoEditorLayoutTemplate/TwoEditorLayoutTemplateA.vue";
@@ -305,8 +305,7 @@ const editor = useEditor({
     // 自定义视频扩展（支持 HTML5 video 和 iframe）
     Node.create({
       name: "video",
-      group: "block",
-      atom: true,
+      inline: true,
       addAttributes() {
         return {
           src: {
@@ -395,10 +394,89 @@ const editor = useEditor({
         } as any;
       },
     }),
+    // Node.create({
+    //   name: "video",
+    //   group: "block",
+
+    //   addAttributes() {
+    //     return {
+    //       src: {
+    //         default: null,
+    //         parseHTML: (el: any) => (el as HTMLSpanElement).getAttribute("src"),
+    //         renderHTML: (attrs: any) => ({ src: attrs.src }),
+    //       },
+    //       controls: {
+    //         default: true,
+    //         renderHTML(attributes: any) {
+    //           return { controls: attributes.controls };
+    //         },
+    //         parseHTML: (element: any) => element.getAttribute("controls"),
+    //       },
+    //       figuration: {
+    //         default: "",
+    //       },
+    //     };
+    //   },
+
+    //   parseHTML() {
+    //     return [
+    //       {
+    //         tag: "div.video-wrapper>video,video",
+    //         getAttrs: (el: any) => ({
+    //           src: (el as HTMLVideoElement).getAttribute("src"),
+    //         }),
+    //       },
+    //     ];
+    //   },
+
+    //   renderHTML({ node, HTMLAttributes }) {
+    //     const figure = document.createElement("figuration");
+    //     figure.style.textAlign = "center";
+    //     figure.style.color = "rgb(136, 136, 136)";
+    //     figure.style.fontSize = "15px";
+    //     figure.style.lineHeight = "1.5em";
+    //     figure.style.marginTop = "5px";
+    //     figure.textContent = node.attrs.figuration;
+    //     if (HTMLAttributes.src) {
+    //       return [
+    //         "div",
+    //         {
+    //           class: "video-wrapper",
+    //           style: "display: flex; flex-direction: column; justify-content: center;",
+    //         },
+    //         ["video", mergeAttributes(HTMLAttributes)],
+    //         node.attrs.figuration && figure,
+    //       ];
+    //     } else {
+    //       return ["figuration", { style: "display: none;" }];
+    //     }
+    //   },
+
+    //   addCommands() {
+    //     return {
+    //       setVideo:
+    //         (src: string, controls: boolean, options: any) =>
+    //         ({ commands, state }: CommandProps) => {
+    //           return commands.insertContentAt(
+    //             state.selection,
+    //             `<video
+    //           src="${src}"
+    //           controls preload="none"></video>`,
+    //             options,
+    //           );
+    //         },
+    //       setVideoFiguration:
+    //         (figuration: string) =>
+    //         ({ commands }: CommandProps) => {
+    //           return commands.updateAttributes("video", { figuration: figuration });
+    //         },
+    //     } as Partial<RawCommands>;
+    //   },
+    // }),
     // 两栏布局扩展A(vue组件版本)
     Node.create({
       name: "twoEditorLayoutTemplateA",
-      content: "inline*",
+      content: "(inline|video)*",
       atom: false,
 
       parseHTML() {
@@ -408,7 +486,6 @@ const editor = useEditor({
           },
         ];
       },
-
       renderHTML() {
         return ["twoEditorLayoutTemplateA", {}, 0];
       },
@@ -419,7 +496,7 @@ const editor = useEditor({
     // 两栏布局扩展B(vue组件版本)
     Node.create({
       name: "twoEditorLayoutTemplateB",
-      content: "inline*",
+      content: "(inline|video)*",
       atom: false,
 
       parseHTML() {
@@ -453,7 +530,7 @@ const editor = useEditor({
       },
 
       renderHTML() {
-        return ["div", { "data-two-editor-layout-template": "" }, 0];
+        return ["div", { "data-two-editor-layout-template": "", class: "two-editor-layout" }, 0];
       },
       addCommands() {
         return {
@@ -684,6 +761,16 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.editor-content :deep(.two-editor-layout) {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
 .tiptap-editor {
   max-width: 1200px;
   margin: 0 auto;
